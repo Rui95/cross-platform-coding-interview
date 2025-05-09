@@ -38,7 +38,10 @@ const ToDoListItem: React.FC<ToDoListItemProps> = ({ todo, refresh }) => {
 
       <IonItemOptions side="end">
         <IonItemOption
-          onClick={() => (window.location.pathname = `/todo/${todo.id}`)}
+          onClick={() => {
+            console.log("### Edit button clicked for item: ", todo);
+            window.location.pathname = `/todo/${todo.id}`;
+          }}
         >
           Edit
         </IonItemOption>
@@ -46,6 +49,7 @@ const ToDoListItem: React.FC<ToDoListItemProps> = ({ todo, refresh }) => {
           color="danger"
           onClick={async () => {
             await ToDo.delete({ id: todo.id });
+            console.log("### Delete button clicked for item: ", todo)
             refresh();
           }}
         >

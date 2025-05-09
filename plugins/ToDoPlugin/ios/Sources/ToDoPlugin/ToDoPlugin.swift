@@ -52,13 +52,19 @@ public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
          call.resolve(["todo": mockedData[id] as Any])
      }
 
+    
      @objc func upsert(_ call: CAPPluginCall) {
          // TODO: Implement Upsert
-         call.resolve()
+
+        print("🟢 upsert() called with: ", call.options)
+        call.resolve()
      }
 
      @objc func delete(_ call: CAPPluginCall) {
          // TODO: Implement delete()
-         call.resolve()
+
+
+        print("🔴 delete() called with: ", call.options)
+        call.resolve()
      }
  }

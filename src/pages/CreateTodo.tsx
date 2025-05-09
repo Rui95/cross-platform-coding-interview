@@ -85,7 +85,10 @@ function CreateToDo() {
             ></IonDatetime>
           </IonItem>
         </IonList>
-        <IonButton expand="block" onClick={() => upsert()}>
+        <IonButton expand="block" onClick={() => {
+          console.log("### Save button clicked for item:", todo);
+          upsert()
+          }}>
           Save
         </IonButton>
       </IonContent>
