@@ -28,6 +28,7 @@ var mockedData = [
     ],
 ]
 
+
 @objc(ToDoPlugin)
 public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "ToDoPlugin"
@@ -38,33 +39,45 @@ public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "upsert", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "delete", returnType: CAPPluginReturnPromise)
     ]
-
-     @objc func getAll(_ call: CAPPluginCall) {
-         let todos = mockedData.sorted { $0.key < $1.key }.map { $0.value }
-         call.resolve(["todos": todos])
-     }
-
-     @objc func getOne(_ call: CAPPluginCall) {
-         guard let id = call.getInt("id") else {
-             call.reject("Malformed request, missing option id")
-             return
-         }
-         call.resolve(["todo": mockedData[id] as Any])
-     }
-
     
-     @objc func upsert(_ call: CAPPluginCall) {
-         // TODO: Implement Upsert
+    @objc func getAll(_ call: CAPPluginCall) {
+        let todos = mockedData.sorted { $0.key < $1.key }.map { $0.value }
+        call.resolve(["todos": todos])
+    }
+    
+    @objc func getOne(_ call: CAPPluginCall) {
+        guard let id = call.getInt("id") else {
+            call.reject("Malformed request, missing option id")
+            return
+        }
+        call.resolve(["todo": mockedData[id] as Any])
+    }
+    
+    
+    @objc func upsert(_ call: CAPPluginCall) {
+        // TODO: Implement Upsert
+        
+        print("🟢 upsert() called")
+     
+    }
+    
+    @objc func delete(_ call: CAPPluginCall) {
+        print("🔴 delete() called")
+        
+        guard let id = call.getInt("id") else {
+            call.reject("Malformed request, missing option id")
+            return
+        }
+        
+        guard mockedData.keys.contains(id) else{
+            call.reject("ToDo with id \(id) not found!")
+            return
+        }
+        
+        mockedData.removeValue(forKey: id)
+       // saveToUserDefaults()
+        let todos = mockedData.sorted { $0.key < $1.key }.map { $0.value }
+        call.resolve(["eliminated" : "ToDo with id \(id) eliminated!", "todos" : todos])
+    }
 
-        print("🟢 upsert() called with: ", call)
-        call.resolve()
-     }
-
-     @objc func delete(_ call: CAPPluginCall) {
-         // TODO: Implement delete()
-
-
-        print("🔴 delete() called with: ", call)
-        call.resolve()
-     }
- }
+}
