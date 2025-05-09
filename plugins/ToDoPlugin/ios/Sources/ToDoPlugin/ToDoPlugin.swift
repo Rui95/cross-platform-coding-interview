@@ -56,7 +56,7 @@ public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
      @objc func upsert(_ call: CAPPluginCall) {
          // TODO: Implement Upsert
 
-        print("🟢 upsert() called with: ", call.options)
+        print("🟢 upsert() called with: ", call)
         call.resolve()
      }
 
@@ -64,7 +64,7 @@ public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
          // TODO: Implement delete()
 
 
-        print("🔴 delete() called with: ", call.options)
+        print("🔴 delete() called with: ", call)
         call.resolve()
      }
  }
