@@ -66,7 +66,9 @@ function CreateToDo() {
               type="text"
               placeholder="Enter Name"
               value={name}
-              onIonChange={(e) => setName(e.detail.value!)}
+              onIonInput={ (e) => { //changed this, to update the name value, without remove focus from the input
+                setName(e.detail.value!)
+              }}
             ></IonInput>
           </IonItem>
 
