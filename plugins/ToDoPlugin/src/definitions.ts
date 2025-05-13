@@ -14,4 +14,5 @@ export interface ToDoPlugin {
   getOne(options: { id: number }): Promise<{ todo: ToDoItem }>;
   upsert(todo: UpsertOptions): Promise<void>;
   delete(options: { id: number }): Promise<void>;
+  clearAll?(): Promise<{ todos: ToDoItem[] }>; //marked as optional, otherwise also have to be implemented on ToDoPluginWeb
 }

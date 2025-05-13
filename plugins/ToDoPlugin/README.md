@@ -17,6 +17,7 @@ npx cap sync
 * [`getOne(...)`](#getone)
 * [`upsert(...)`](#upsert)
 * [`delete(...)`](#delete)
+* [`clearAll()`](#clearall)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 
@@ -73,6 +74,17 @@ delete(options: { id: number; }) => Promise<void>
 | Param         | Type                         |
 | ------------- | ---------------------------- |
 | **`options`** | <code>{ id: number; }</code> |
+
+--------------------
+
+
+### clearAll()
+
+```typescript
+clearAll() => Promise<{ todos: ToDoItem[]; }>
+```
+
+**Returns:** <code>Promise&lt;{ todos: ToDoItem[]; }&gt;</code>
 
 --------------------
 

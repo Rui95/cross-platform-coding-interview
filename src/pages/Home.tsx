@@ -11,19 +11,21 @@ import {
   IonRefresherContent,
   IonTitle,
   IonToolbar,
-  useIonViewWillEnter
+  useIonViewWillEnter,
+  IonAlert,
 } from "@ionic/react";
 import "./Home.css";
 
 const Home: React.FC = () => {
   const [todos, setTodos] = useState<ToDoItem[]>([]);
   const ionListRef = createRef<HTMLIonListElement>();
+  const [showAlert, setShowAlert] = useState(false);
 
   useIonViewWillEnter(() => {
     ToDo.getAll()
-    .then(({ todos }) => {
-      setTodos(todos);
-    })
+      .then(({ todos }) => {
+        setTodos(todos);
+      })
   });
 
   const refresh = async (e?: CustomEvent) => {
@@ -31,6 +33,15 @@ const Home: React.FC = () => {
     const { todos } = await ToDo.getAll();
     setTodos(todos);
     e?.detail.complete();
+  };
+
+  const clearAll = async () => {
+    const { todos = [] } = await ToDo.clearAll?.() ?? {}; //once is optional on interface
+    setTodos(todos);
+  };
+
+  const handleClearAll = () => {
+    setShowAlert(true)
   };
 
   return (
@@ -61,6 +72,35 @@ const Home: React.FC = () => {
           >
             Create ToDo
           </IonButton>
+          {/* Show clear button if more than one ToDo  */}
+          {todos.length > 1 && (
+            <IonButton
+              expand="block"
+              color="danger"
+              onClick={handleClearAll} // show alert before delete
+            >
+              Clear All
+            </IonButton>
+          )}
+
+          <IonAlert isOpen={showAlert}
+            onDidDismiss={() => setShowAlert(false)}
+            header={'Delete all ToDos'}
+            message={'Are you sure you want to delete all ToDos?'}
+            buttons={[
+              {
+                text: 'Cancel',
+                role: 'cancel',
+                handler: () => console.log('Cancel delete all'),
+              },
+              {
+                text: 'Delete All',
+                handler: () => {
+                  clearAll();
+                  setShowAlert(false) //close alert
+                },
+              }
+            ]} />
         </IonList>
       </IonContent>
     </IonPage>
