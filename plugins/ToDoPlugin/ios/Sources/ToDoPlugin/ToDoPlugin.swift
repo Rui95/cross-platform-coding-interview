@@ -1,33 +1,6 @@
 import Capacitor
 import Foundation
 
-// var mockedData = [
-//     1: [
-//         "id": 1,
-//         "name": "Interview with Ionic",
-//         "dueDate": 1_634_569_785_944,
-//         "done": true,
-//     ],
-//     2: [
-//         "id": 2,
-//         "name": "Create amazing product",
-//         "dueDate": 1_634_569_785_944,
-//         "done": false,
-//     ],
-//     3: [
-//         "id": 3,
-//         "name": "???",
-//         "dueDate": 1_634_569_785_944,
-//         "done": false,
-//     ],
-//     4: [
-//         "id": 4,
-//         "name": "Profit",
-//         "dueDate": 1_634_569_785_944,
-//         "done": false,
-//     ],
-// ]
-
 @objc(ToDoPlugin)
 public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "ToDoPlugin"
@@ -43,12 +16,19 @@ public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
     private let storageKey = "ToDoItems"
     private var _toDoStored: [Int: ToDoItem]? = nil
 
-    // lazy loading from UserDefaults
-    // ensures data is only loaded when needed
+    // Lazy loading from UserDefaults
+    // On first access, tries to load saved data
+    // If loading fails, return mocked data
     private var toDoStored: [Int: ToDoItem] {
         get {
             if _toDoStored == nil {
-                _toDoStored = loadFromUserDefaults()
+                switch loadFromUserDefaults() {
+                case let .success(toDos):
+                    _toDoStored = toDos
+                case let .failure(error):
+                    print(error.localizedDescription)
+                    _toDoStored = mockedData()
+                }
             }
             return _toDoStored ?? [:]
         }
@@ -80,9 +60,13 @@ public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
         // in case of an existing id -> update the current call.getInt("id")
         let id = call.getInt("id") ?? generateUniqueID()
         toDoStored[id] = ToDoItem(id: id, name: name, dueDate: dueDate, done: done)
-        saveToDosToUserDefaults()
-        let todos = toDoStored.sorted { $0.key < $1.key }.map { $0.value.toDictionary() } // order and convert to dictionary
-        call.resolve(["upsert": "ToDo with id \(id) updated/added!", "todos": todos]) // return new data to JS
+        let todos = toDoStored.sorted { $0.key < $1.key }.map { $0.value.toDictionary() }
+        switch saveToDosToUserDefaults() {
+        case .success:
+            call.resolve(["upsert": "ToDo with id \(id) updated/inserted!", "todos": todos]) // return new data to JS
+        case let .failure(error):
+            call.reject("Failed to save ToDo", nil, error)
+        }
     }
 
     @objc func delete(_ call: CAPPluginCall) {
@@ -97,15 +81,23 @@ public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         toDoStored.removeValue(forKey: id)
-        saveToDosToUserDefaults()
-        let todos = toDoStored.sorted { $0.key < $1.key }.map { $0.value.toDictionary() } // order and convert to dictionary
-        call.resolve(["eliminated": "ToDo with id \(id) eliminated!", "todos": todos]) // return new data to JS
+        let todos = toDoStored.sorted { $0.key < $1.key }.map { $0.value.toDictionary() }
+        switch saveToDosToUserDefaults() {
+        case .success:
+            call.resolve(["delete": "ToDo with id \(id) eliminated!", "todos": todos]) // return new data to JS
+        case let .failure(error):
+            call.reject("Failed to save ToDo", nil, error)
+        }
     }
 
     @objc func clearAll(_ call: CAPPluginCall) {
         toDoStored.removeAll()
-        saveToDosToUserDefaults()
-        call.resolve(["eliminated": "All ToDos deleted!", "todos": []]) // return new data to JS
+        switch saveToDosToUserDefaults() {
+        case .success:
+            call.resolve(["clearAll": "All ToDos deleted!", "todos": []]) // return new data to JS
+        case let .failure(error):
+            call.reject("Failed to save ToDo", nil, error)
+        }
     }
 
     // generate a new id starting from the current max id in the ToDo List
@@ -118,30 +110,34 @@ public class ToDoPlugin: CAPPlugin, CAPBridgedPlugin {
         return id
     }
 
-    private func saveToDosToUserDefaults() {
+    private func saveToDosToUserDefaults() -> Result<Void, Error> {
         let encoder = JSONEncoder()
         do {
             let encoded = try encoder.encode(toDoStored)
             UserDefaults.standard.set(encoded, forKey: storageKey)
+            return .success(())
         } catch {
-            print("🔴 Failed to encode ToDo data: \(error.localizedDescription)")
+            return .failure(error)
         }
     }
 
-    private func loadFromUserDefaults() -> [Int: ToDoItem] {
+    private func loadFromUserDefaults() -> Result<[Int: ToDoItem], Error> {
         let decoder = JSONDecoder()
 
         if let data = UserDefaults.standard.data(forKey: storageKey) {
             do {
                 let decoded = try decoder.decode([Int: ToDoItem].self, from: data)
-                return decoded
+                return .success(decoded)
             } catch {
-                print("🔴 Failed to decode ToDo data from UserDefaults: \(error.localizedDescription)")
+                return .failure(error)
             }
         } else {
-            print("No data found in UserDefaults for the key \(storageKey).")
+            let error = NSError(domain: "ToDoPlugin", code: 1, userInfo: [NSLocalizedDescriptionKey: "No data found in UserDefaults for key '\(storageKey)'."])
+            return .failure(error)
         }
+    }
 
+    private func mockedData() -> [Int: ToDoItem] {
         let mockedData: [Int: ToDoItem] = [
             1: ToDoItem(id: 1, name: "Interview with Ionic", dueDate: 1_634_569_785_944, done: true),
             2: ToDoItem(id: 2, name: "Create amazing product", dueDate: 1_634_569_785_944, done: false),
